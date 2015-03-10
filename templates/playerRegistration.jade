@@ -1,0 +1,20 @@
+doctype html
+html(lang="en")
+  head
+    script(src='https://www.google.com/recaptcha/api.js')
+  title Machi Koro
+  link(rel="stylesheet" href="/static/lib/bootstrap/dist/css/bootstrap.min.css")
+  body
+    div.container
+      div.row
+        div.col-xs-12
+          div.text-danger
+            if error
+              | #{error}
+          form(method="post" action="/registerName")
+            div.form-group
+              input.form-control(type="text" name="userName" placeholder="Enter a nick name")
+              br
+              div.g-recaptcha(data-sitekey="#{siteKey}")
+              br
+              button.btn.btn-primary Join

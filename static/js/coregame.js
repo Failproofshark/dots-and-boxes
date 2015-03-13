@@ -72,7 +72,7 @@ var Game = function(dimension) {
     this.currentTurn = 0;
 };
 
-Game.prototype.addToSelection = function(vertex) {
+Game.prototype.addToSelection=  function(vertex) {
     //Sorting helps not only in drawing but when checking for completed squares
     this.currentSelection.push(vertex);
     this.currentSelection = _.sortBy(this.currentSelection, 'id');

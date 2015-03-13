@@ -1,0 +1,15 @@
+doctype html
+html(lang="en")
+  head
+    title Dot and Boxes
+    link(rel="stylesheet" href="/static/lib/bootstrap/dist/css/bootstrap.min.css")
+    style.
+      .preloader { width: 30px; }
+    script(src="/static/lib/mithril/mithril.js")
+    script(src="/static/lib/lodash/lodash.js")
+    script(src="/static/lib/jquery/dist/jquery.min.js")
+    script(src="/socket.io/socket.io.js")
+    script.
+      var userName = "#{userName}"
+  body
+    script(src="/static/js/app.js")

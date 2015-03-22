@@ -328,6 +328,7 @@ io.on("connection", function(socket) {
         };
         GameTable.findOneAsync({socketRoomId:socket.request.session.currentTable})
             .then(function(table) {
+                console.log('first');
                 if (!table) {
                     throw new Error("ENOTABLE");
                 } else if (table.players[table.currentTurn].tempId !== socket.request.session.tempId) {
@@ -343,12 +344,12 @@ io.on("connection", function(socket) {
 
                     var promises = {};
 
-                    if (table[0].completedSquares === table[0].squares) {
+                    if (table.completedSquares === table.squares) {
                         table.gameState = 2;
-                        if (table[0].players[0].score === table[0].players[1].score) {
+                        if (table.players[0].score === table.players[1].score) {
                             promises.winner = -1;
                         } else {
-                            promises.winner = (table[0].players[0].score > table[0].players[1].score) ? table[0].players[0].userName : table[0].players[1].userName;
+                            promises.winner = (table.players[0].score > table.players[1].score) ? table.players[0].userName : table.players[1].userName;
                         }
                     }                    
 
@@ -358,7 +359,8 @@ io.on("connection", function(socket) {
                     return Promise.props(promises);
                 }
             })
-            .spread(function(results) {
+            .then(function(results) {
+                console.log("and then");
                 var returnData = {nextTurn: results.savedTable[0].currentTurn,
                                   connectedVerticies: [results.savedTable[0].verticies[data.verticies[0].id],
                                                        results.savedTable[0].verticies[data.verticies[1].id]],

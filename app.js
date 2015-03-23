@@ -328,7 +328,6 @@ io.on("connection", function(socket) {
         };
         GameTable.findOneAsync({socketRoomId:socket.request.session.currentTable})
             .then(function(table) {
-                console.log('first');
                 if (!table) {
                     throw new Error("ENOTABLE");
                 } else if (table.players[table.currentTurn].tempId !== socket.request.session.tempId) {
@@ -360,7 +359,6 @@ io.on("connection", function(socket) {
                 }
             })
             .then(function(results) {
-                console.log("and then");
                 var returnData = {nextTurn: results.savedTable[0].currentTurn,
                                   connectedVerticies: [results.savedTable[0].verticies[data.verticies[0].id],
                                                        results.savedTable[0].verticies[data.verticies[1].id]],

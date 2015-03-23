@@ -178,7 +178,6 @@ app.ViewModel = new function() {
                     vm.tableNotice = "It's " + vm.currentTable.players[vm.currentTable.currentTurn].name + " turn";
                 },
                 "server-error": function(data) {
-                    console.log(data.errorCode);
                     switch(data.errorCode) {
                     case "ENOTREGISTERED":
                         window.location = "/";
@@ -190,6 +189,7 @@ app.ViewModel = new function() {
                         vm.clientError = "The table you tried to join is full";
                         break;
                     case "EWRONGPASSWORD":
+                        vm.isVerifyingPassword = false;
                         vm.clientError = "The password you input was incorrect";
                         break;
                     case "ETABLELOCKED":
@@ -228,8 +228,8 @@ app.ViewModel = new function() {
         vm.createTableError = m.prop();
         vm.tableCreationInProgress = false;
         vm.createTable = function() {
-            if (_.isEmpty(vm.createGridDimension()) || !_.isNumber(Number(vm.createGridDimension())) || Number(vm.createGridDimension()) > 10 || Number(vm.createGridDimension()) < 1) {
-                vm.createTableError("Please specify the grid size of the table with a single number (1-10)");
+            if (_.isEmpty(vm.createGridDimension()) || !_.isNumber(Number(vm.createGridDimension())) || Number(vm.createGridDimension()) > 5 || Number(vm.createGridDimension()) < 2) {
+                vm.createTableError("Please specify the grid size of the table with a single number (2-5)");
             } else {
                 var createTableParameters = {dimensions:Number(vm.createGridDimension())};
                 
@@ -358,7 +358,7 @@ var CreateTableView = function() {
         ]),
         m("div.row", {style:formDisplay}, [
             m("div.col-xs-12", [
-                m("div", "This game is played on a square grid ranging from a 2x2 grid to a 10x10 grid. Input a single number below to create a grid. Optionally, you may input a password to make the game private (be sure to give the other player the password so they can get in the room"),
+                m("div", "This game is played on a square grid ranging from a 2x2 grid to a 5x5 grid. Input a single number below to create a grid. Optionally, you may input a password to make the game private (be sure to give the other player the password so they can get in the room"),
                 m("form", [
                     m("div.form-group", [
                         m("input.form-control[type=text]", {onchange: m.withAttr("value", app.ViewModel.createGridDimension), placeholder:"Grid size (10 maximum)", value:app.ViewModel.createGridDimension()}),
@@ -523,8 +523,6 @@ var GameTableView = function() {
 var PasswordView = function() {
     var showForm = (app.ViewModel.isVerifyingPassword) ? "display:none" : "display:inherit";
     var preloader = (app.ViewModel.isVerifyingPassword) ? "display:inherit" : "display:";
-    console.log("bloropin");
-    console.log(checkCurrentScreen("password"));
     return m("div", {style: checkCurrentScreen("password")}, [
         m("div.row", {style: preloader}, [
             m("div.col-xs-12", [

@@ -105,6 +105,7 @@ app.ViewModel = new function() {
         vm.currentScreen = "lobby";
         vm.socket;
         vm.ClientError = "";
+        vm.resetTable = true;
 
         vm.myName = userName;
         vm.tableNotice = "Waiting for an opponent...";
@@ -139,7 +140,9 @@ app.ViewModel = new function() {
                     vm.currentScreen = "gameTable";
                 },
                 "give-up": function(data) {
-                    console.log('blorp');
+                    if (vm.currentTable) {
+                        vm.currentTable.gameState = 3;
+                    }
                     vm.tableNotice = "The opponent has left the game. You win by default!";
                 },
                 "another-player-joined-table": function(data) {
@@ -168,6 +171,9 @@ app.ViewModel = new function() {
                     vm.currentTable.currentTurn = data.nextTurn;
 
                     if (data.winner) {
+                        if (vm.currentTable) {
+                            vm.currentTable.gameState = 2;
+                        }
                         vm.tableNotice = data.winner + " has won";
                     } else {
                         vm.tableNotice = "It's " + vm.currentTable.players[vm.currentTable.currentTurn].name + "'s turn";
@@ -183,9 +189,11 @@ app.ViewModel = new function() {
                         window.location = "/";
                         break;
                     case "ENOTABLE":
+                        vm.currentScreen = "lobby";
                         vm.clientError = "We could not find the table you were trying to join";
                         break;
                     case "ETABLEFULL":
+                        vm.currentScreen = "lobby";                        
                         vm.clientError = "The table you tried to join is full";
                         break;
                     case "EWRONGPASSWORD":
@@ -193,6 +201,7 @@ app.ViewModel = new function() {
                         vm.clientError = "The password you input was incorrect";
                         break;
                     case "ETABLELOCKED":
+                        vm.currentScreen = "lobby";
                         vm.clientError = "The table is currently locked";
                         break;
                     default:
@@ -235,7 +244,6 @@ app.ViewModel = new function() {
                 
                 if (!_.isEmpty($.trim(vm.tablePassword()))) {
                     createTableParameters.password = $.trim(vm.tablePassword());
-                    console.log(createTableParameters.password = $.trim(vm.tablePassword()));
                 }
                 
                 vm.socket.emit("create-table", createTableParameters);
@@ -291,7 +299,9 @@ app.ViewModel = new function() {
         };
 
         vm.returnToLobby = function() {
+            vm.currentTable = null;
             vm.currentScreen = "loading";
+            vm.resetTable = true;
             vm.socket.emit("leave-table");
         };
     };
@@ -393,7 +403,7 @@ var GameTableView = function() {
         if (!isInit) {
             context.canvasContext = element.getContext('2d');
             var canvasClickListener = function(event) {
-                if (app.ViewModel.currentTable && app.ViewModel.currentTable.isCurrentTurn()) {
+                if (app.ViewModel.currentTable && app.ViewModel.currentTable.gameState === 1 && app.ViewModel.currentTable.isCurrentTurn()) {
                     var x = (event.pageX) ? event.pageX : (event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft);
                     var y = (event.pageY) ? event.pageY : (event.clientY + document.body.scrollTop + document.documentElement.scrollTop);
                     x -= $(element).offset().left;
@@ -462,6 +472,15 @@ var GameTableView = function() {
         };        
         
         if (app.ViewModel.currentTable && app.ViewModel.currentTable.currentSelection.length === 0) {
+            /* We really aren't supposed to modify the viewmodel in a config since it would
+             * usually break reusability but the alternative is a bit more complicated (essentially
+             * have the state passed in via a closure)
+             */
+            if (app.ViewModel.resetTable) {
+                context.canvasContext.fillStyle = "#ffffff";
+                context.canvasContext.fillRect(0,0,640,640);
+                app.ViewModel.resetTable = false;
+            }
             _.each(app.ViewModel.currentTable.verticies, function(vertex) {
                 vertex.drawMethod("#000000", context.canvasContext);
             });

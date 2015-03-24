@@ -9,7 +9,7 @@ var Promise = require("bluebird");
 
 var io = require("socket.io").listen(server);
 var mongoose = Promise.promisifyAll(require("mongoose"));
-mongoose.connect("mongodb://localhost/Dotboxes");
+mongoose.connect(Config.connectionString);
 var db = mongoose.connection;
 
 var Models = require(__dirname + "/Models.js");

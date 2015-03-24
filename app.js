@@ -14,7 +14,9 @@ var db = mongoose.connection;
 
 var Models = require(__dirname + "/Models.js");
 
-app.use("/static", express.static(__dirname+"/static"));
+if (Config.isDebug) {
+    app.use("/static", express.static(__dirname+"/static"));
+}
 app.set('view engine', 'jade');
 app.set('views', (__dirname + '/templates'));
 
@@ -53,7 +55,6 @@ var getRequest = Promise.method(function(options) {
         });
     });
 });
-
 app.get("/", function(req, res, next) {
     var literals = {siteKey:Config.recaptcha.siteKey};
     if (req.query.error) {
@@ -123,7 +124,7 @@ app.get("/game", function(req, res) {
     if (_.isEmpty(req.session.tempId) && _.isEmpty(req.session.userName)) {
         res.redirect("/");
     } else {
-        res.render('game', {userName: req.session.userName});
+        res.render('game', {userName: req.session.userName, connectionUrl: Config.connectionUrl});
     }
 });
 
@@ -138,10 +139,8 @@ io.on("connection", function(socket) {
         if (socket.request.session.userName) {
             GameTable.findAsync({abandoned:false, isLocked:false})
                 .then(function(tables) {
-                    console.log(tables.length);
                     var tablesList = {};
                     if (tables) {
-                        console.log("constructing list");
                         _.each(tables, function(table) {
                             if (table.players.length === 1) {
                                 var tableObject = {};
@@ -152,7 +151,6 @@ io.on("connection", function(socket) {
                                                                  };
                             }
                         });
-                        console.log("emitting signal");
                         socket.emit("fresh-table-list", {tableList: tablesList});
                     }
                 })
@@ -281,9 +279,11 @@ io.on("connection", function(socket) {
             })
             .spread(function(results, sessionSaveResult) {
                 socket.join(results.table.socketRoomId);
+                io.emit("table-closed", {roomId:results.table.socketRoomId});
                 socket.emit("joined-table", {table: _.omit(results.table.toJSON(), "_id", "socketRoomId")});
                 socket.to(results.table.socketRoomId).emit("another-player-joined-table", {newPlayer: socket.request.session.userName});
                 io.to(results.table.socketRoomId).emit("start-game", {});
+
             })
             .catch(function(err) {
                 console.log(err);
@@ -297,8 +297,7 @@ io.on("connection", function(socket) {
 
     socket.on("record-move", function(data) {
         var determineCompletedSquare = function(vertexPair, vertexCollection, numberOfRows) {
-            console.log("determining...");
-            var completedSquareIndicies = [];
+           var completedSquareIndicies = [];
             var addCompletedSquare = function(topLeftCoordinate, bottomRightCoordinate) {
                 if (_.contains(topLeftCoordinate.adjacencyList, topLeftCoordinate.id+1) &&
                     _.contains(topLeftCoordinate.adjacencyList, topLeftCoordinate.id+numberOfRows) &&
